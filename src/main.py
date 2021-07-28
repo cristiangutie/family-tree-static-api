@@ -20,25 +20,30 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
-# Handle/serialize errors like a JSON object
-@app.errorhandler(APIException)
-def handle_invalid_usage(error):
-    return jsonify(error.to_dict()), error.status_code
+first_generation = [{"id": 1, "name": "Julio", "last-name": "Gómez", "age": 98, "children-ref-id": [3,4,5,6]}, {"id": 2, "name": "Marcela", "last-name": "Pérez", "age": 92, "children-ref-id": [3,4,5,6]}]
+second_generation = [{"id": 3, "name": "Marcela", "last-name": "Gómez", "age": 58, "parent-ref-id": [1,2], "children-ref-id": 7}, {"id": 4, "name": "Guillermo", "last-name": "Gómez", "age": 56, "parent-ref-id": [1,2], "children-ref-id": 8}, {"id": 5, "name": "Viviana", "last-name": "Gómez", "age": 54, "parent-ref-id": [1,2], "children-ref-id": 9}, {"id": 6, "name": "Julio", "last-name": "Gómez", "age": 50, "parent-ref-id": [1,2], "children-ref-id": 10}]
+third_generation = [{"id": 7, "name": "Marcela", "last-name": "Gómez", "age": 58, "parent-ref-id": 7}, {"id": 8, "name": "Guillermo", "last-name": "Gómez", "age": 56, "parent-ref-id": 4}, {"id": 9, "name": "Viviana", "last-name": "Gómez", "age": 54, "parent-ref-id": 5}, {"id": 10, "name": "Julio", "last-name": "Gómez", "age": 50, "parent-ref-id": 6}]
+all_generations = first_generation + second_generation + third_generation
 
 # generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/all', methods=['GET'])
+def handle_all():
+    all_members = jsonify(first_generation + second_generation + third_generation)
+    return all_members
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/member/<int:id>', methods=['GET'])
+def handle_member(id):
+    match = []
+    for member in all_generations:
+        if member["id"] == id:
+            match.append(member)
 
-    return jsonify(response_body), 200
-
+    return jsonify(match)
+        
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
